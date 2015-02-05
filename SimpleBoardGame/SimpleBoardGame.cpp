@@ -15,159 +15,174 @@ Players win by getting to or past space 20.
 #include <time.h>
 
 class Player {
-		std::string name;
-		int wins;
-		int position;
-	public:
-		Player (std::string p_name):
-			name(p_name),
-			position(1),
-			wins(0)
-		{
-		};
-		int getPosition () const
-		{
-			return position;
-		};
-		void setPosition (int p_position)
-		{
-			position = p_position;
-		};
-		void adjustPosition (int delta)
-		{
-			position += delta;
-		};
-		int getWins () const
-		{
-			return wins;
-		};
-		int setWins () const
-		{
-			return wins;
-		};
-		void adjustWins (int delta)
-		{
-			wins += delta;
-		};
-		std::string getName () const
-		{
-			return name;
-		}
+	std::string name;
+	int wins;
+	int position;
+public:
+	Player(std::string p_name) :
+		name(p_name),
+		position(1),
+		wins(0)
+	{
+	};
+	int getPosition() const
+	{
+		return position;
+	};
+	void setPosition(int p_position)
+	{
+		position = p_position;
+	};
+	void adjustPosition(int delta)
+	{
+		position += delta;
+	};
+	int getWins() const
+	{
+		return wins;
+	};
+	int setWins() const
+	{
+		return wins;
+	};
+	void adjustWins(int delta)
+	{
+		wins += delta;
+	};
+	std::string getName() const
+	{
+		return name;
+	}
 };
 
 class DiceRace {
-	private:
-		std::vector<Player> players;
-		Player* winner;
-		int total_players;
-		bool has_winner;
-		int winning_space;
-		int dice_sides;
-		int max_penalty_spaces;
-		int min_penalty_spaces;
-		int rollDice ()
+private:
+	std::vector<Player> players;
+	Player* winner;
+	int total_players;
+	bool has_winner;
+	int winning_space;
+	int dice_sides;
+	int max_penalty_spaces;
+	int min_penalty_spaces;
+	int rollDice()
+	{
+		return std::rand() % dice_sides + 1;
+	};
+public:
+	DiceRace(std::vector<Player> &p_players) :
+		players(p_players),
+		total_players(p_players.size()),
+		has_winner(false),
+		winning_space(20),
+		dice_sides(6),
+		max_penalty_spaces(3),
+		min_penalty_spaces(1)
+	{
+	};
+	Player& getWinner() const
+	{
+		return *winner;
+	};
+	std::vector<Player> getPlayers() const
+	{
+		return players;
+	};
+	void resetPositions() {
+		for (int i = 0; i < total_players; ++i)
 		{
-			return std::rand() % dice_sides + 1;
-		};
-	public:
-		DiceRace (std::vector<Player> &p_players):
-			players(p_players),
-			total_players(p_players.size()),
-			has_winner(false),
-			winning_space(20),
-			dice_sides(6),
-			max_penalty_spaces(3),
-			min_penalty_spaces(1)
+			Player& player = players[i];
+			player.setPosition(1);
+		}
+		has_winner = false;
+	};
+	void movePlayer(Player* player_ptr)
+	{
+		Player& current_player = *player_ptr;
+		//cout << &current_player << " - test\n";
+		int spaces_to_move = rollDice();
+		current_player.adjustPosition(spaces_to_move);
+		int player_space = current_player.getPosition();
+
+		std::cout << current_player.getName() << " moved forward " << spaces_to_move << " spaces to space: " << player_space << "." << std::endl;
+		if (player_space >= winning_space)
 		{
-		};
-		Player& getWinner() const
+			has_winner = true;
+			winner = &current_player;
+		}
+		else
 		{
-			return *winner;
-		};
-		std::vector<Player> getPlayers() const
-		{
-			return players;
-		};
-		void resetPositions () {
+			// Iterate through other players
 			for (int i = 0; i < total_players; ++i)
 			{
-				Player& player = players[i];
-				player.setPosition(1);
-			}
-			has_winner = false;
-		};
-		void movePlayer (Player* player_ptr)
-		{
-			Player& current_player = *player_ptr;
-			//cout << &current_player << " - test\n";
-			int spaces_to_move = rollDice();
-			current_player.adjustPosition(spaces_to_move);
-			int player_space = current_player.getPosition();
+				Player& other_player = players[i];
+				if (&other_player == player_ptr)
+					continue;
 
-			std::cout << current_player.getName() << " moved forward " << spaces_to_move << " spaces to space: " << player_space << ".\n";
-			if (player_space >= winning_space)
-			{
-				has_winner = true;
-				winner = &current_player;
-			} else
-			{
-				// Iterate through other players
-				for (int i = 0; i < total_players; ++i)
+				if (player_space == other_player.getPosition())
 				{
-					Player& other_player = players[i];
-					if (&other_player == player_ptr)
-						continue;
-
-					if (player_space == other_player.getPosition())
-					{
-						// Player lands on other player's position
-						int spaces_back = rand() % (max_penalty_spaces - min_penalty_spaces + 1) + min_penalty_spaces;
-						other_player.adjustPosition(-1 * spaces_back);
-						std::cout << current_player.getName() << " landed on " << other_player.getName() << "'s space, causing ";
-						std::cout << other_player.getName() << " to take a tumble and move backwards " << spaces_back << " spaces.\n";
-					}
+					// Player lands on other player's position
+					int spaces_back = rand() % (max_penalty_spaces - min_penalty_spaces + 1) + min_penalty_spaces;
+					other_player.adjustPosition(-1 * spaces_back);
+					std::cout << current_player.getName() << " landed on " << other_player.getName() << "'s space, causing ";
+					std::cout << other_player.getName() << " to take a tumble and move backwards " << spaces_back << " spaces." << std::endl;
 				}
-				//cout << current_player.getName() << current_player.getPosition() << "  " << &current_player << " - test\n";
 			}
-		};
-		void play()
-		{
-			int turn_index = -1;
-			while(!has_winner)
-			{
-				turn_index = (turn_index + 1) % total_players;
-				movePlayer(&players[turn_index]);
-			}
+			//cout << current_player.getName() << current_player.getPosition() << "  " << &current_player << " - test\n";
 		}
+	};
+	void play()
+	{
+		int turn_index = -1;
+		while (!has_winner)
+		{
+			turn_index = (turn_index + 1) % total_players;
+			movePlayer(&players[turn_index]);
+		}
+	}
 };
 
-int main () {
+int main() {
 	std::srand(time(NULL));
-	
-	std::cout << "Input number of Dice Race! games to play: ";
 
-	std::string games_count_input;
-	std::cin >> games_count_input;
-	int games_count = std::stoi(games_count_input);
+	bool hasReceivedValidInput;
+	int games_count;
+	do
+	{
+		std::cout << "Input number of Dice Race! games to play: ";
 
-	std::cout << "Going to play " << games_count << " games\n";
-	
+		std::string games_count_input;
+		std::cin >> games_count_input;
+		try
+		{
+			games_count = std::stoi(games_count_input);
+			hasReceivedValidInput = true;
+		}
+		catch (std::invalid_argument)
+		{
+			hasReceivedValidInput = false;
+			std::cout << "Invalid integer: " << games_count_input << std::endl;
+		}
+	} while (!hasReceivedValidInput);
+
+	std::cout << "Going to play " << games_count << " games" << std::endl;
+
 	DiceRace game{ std::vector<Player> {
-			/*
-			Player("Rob"),
-			Player("Tom"),
-			Player("Juliet"),
-			Player("Sam"),//*/
-			Player("Jack"),
+		/*
+		Player("Rob"),
+		Player("Tom"),
+		Player("Juliet"),
+		Player("Sam"),//*/
+		Player("Jack"),
 			Player("Jill")
-		} };
+	} };
 	for (int count = 0; count < games_count; ++count)
 	{
 		game.play();
 		Player& winner = game.getWinner();
 
-		std::cout << winner.getName() << " has won!\n";
-		
+		std::cout << winner.getName() << " has won!" << std::endl;
+
 		winner.adjustWins(1);
 
 		// Reset players
@@ -178,7 +193,7 @@ int main () {
 	for (int i = 0; i < players.size(); ++i)
 	{
 		Player player = players[i];
-		std::cout << player.getName() << " won " << player.getWins() << " games.\n";
+		std::cout << player.getName() << " won " << player.getWins() << " games." << std::endl;
 	}
 
 	return 0;
