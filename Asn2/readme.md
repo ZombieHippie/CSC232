@@ -1,4 +1,4 @@
-# Dice Race!
+# Simple Borad Game
 
 In this assignment we were required to track two players progress on a game board.
 Each player should roll a dice to move 1-6 spaces forward, and if they land on the
