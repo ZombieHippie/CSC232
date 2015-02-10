@@ -1,8 +1,8 @@
 /*
 Name: Cole Lawrence
-Date: February 5, 2015
+Date: February 10th, 2015
 Assignment: Asn3 "Dice Race!"
-Platform/IDE: Windows 8/MVSE2013
+Platform/IDE: Windows 8/MVSP2013
 Description:
 This program demonstrates two players (Jack and Jill) moving along a line (in increments of 1 to 6).
 If a player lands on another player's space that player is sent back 1 to 3 spaces.
@@ -104,7 +104,6 @@ public:
 		current_player.adjustPosition(spaces_to_move);
 		int player_space = current_player.getPosition();
 
-		std::cout << current_player.getName() << " moved forward " << spaces_to_move << " spaces to space: " << player_space << "." << std::endl;
 		if (player_space >= winning_space)
 		{
 			has_winner = true;
@@ -112,6 +111,7 @@ public:
 		}
 		else
 		{
+			std::vector<Player*> playersTumbled;
 			// Iterate through other players
 			for (int i = 0; i < total_players; ++i)
 			{
@@ -124,15 +124,36 @@ public:
 					// Player lands on other player's position
 					int spaces_back = rand() % (max_penalty_spaces - min_penalty_spaces + 1) + min_penalty_spaces;
 					other_player.adjustPosition(-1 * spaces_back);
-					std::cout << current_player.getName() << " landed on " << other_player.getName() << "'s space, causing ";
-					std::cout << other_player.getName() << " to take a tumble and move backwards " << spaces_back << " spaces." << std::endl;
+					playersTumbled.push_back(&other_player);
 				}
 			}
+
+			// Print
+			std::cout << spaces_to_move << "\t";
+			for (int i = 0; i < total_players; ++i)
+			{
+				Player& other_player = players[i];
+				std::cout << other_player.getPosition() << "\t";
+			};
+			for (std::vector<Player*>::iterator it = playersTumbled.begin(); it < playersTumbled.end(); it++) {
+				std::cout << "Tumble " << (**it).getName() << "!\t";
+			}
+				
 			//cout << current_player.getName() << current_player.getPosition() << "  " << &current_player << " - test\n";
+			std::cout << std::endl;
 		}
 	};
 	void play()
 	{
+		// Print header
+		std::cout << "Roll\t";
+		for (int i = 0; i < total_players; ++i)
+		{
+			Player& other_player = players[i];
+			std::cout << other_player.getName() << "\t";
+		};
+		std::cout << std::endl << std::string((total_players + 1) * 8, '-') << std::endl;
+
 		int turn_index = -1;
 		while (!has_winner)
 		{
@@ -149,14 +170,16 @@ int main() {
 	int games_count;
 	do
 	{
-		std::cout << "Input number of Dice Race! games to play: ";
+		std::cout << "Input an odd number of Dice Race! games to play: ";
 
 		std::string games_count_input;
 		std::cin >> games_count_input;
 		try
 		{
 			games_count = std::stoi(games_count_input);
-			hasReceivedValidInput = true;
+			hasReceivedValidInput = games_count % 2 == 1;
+			if (!hasReceivedValidInput)
+				std::cout << "Please specify an odd integer."<< std::endl;
 		}
 		catch (std::invalid_argument)
 		{
@@ -174,14 +197,14 @@ int main() {
 		Player("Juliet"),
 		Player("Sam"),//*/
 		Player("Jack"),
-			Player("Jill")
+		Player("Jill")
 	} };
 	for (int count = 0; count < games_count; ++count)
 	{
 		game.play();
 		Player& winner = game.getWinner();
 
-		std::cout << winner.getName() << " has won!" << std::endl;
+		std::cout << winner.getName() << " has won!" << std::endl << std::endl;
 
 		winner.adjustWins(1);
 
@@ -189,12 +212,33 @@ int main() {
 		game.resetPositions();
 	}
 
-	std::vector<Player> players = game.getPlayers();
+	Player *grandWinner = NULL;
+	std::vector<Player> &players = game.getPlayers();
 	for (int i = 0; i < players.size(); ++i)
 	{
-		Player player = players[i];
-		std::cout << player.getName() << " won " << player.getWins() << " games." << std::endl;
-	}
+		Player& player = players[i];
+		int gamesWon = player.getWins();
 
+		if (grandWinner == NULL || (*grandWinner).getWins() < gamesWon)
+			grandWinner = &player;
+
+		std::cout << player.getName() << " won " << gamesWon << (gamesWon == 1 ? " game" : " games");
+
+		if (i == players.size() - 2)
+		{
+			std::cout << ", and ";
+		}
+		else if (i < players.size() - 1)
+		{
+			std::cout << ", ";
+		}
+	}
+	std::cout << "." << std::endl << std::endl;
+
+	std::cout << "The grand winner of the Dice Race! games is " << (*grandWinner).getName();
+
+
+	std::string a;
+	std::cin >> a;
 	return 0;
 }
