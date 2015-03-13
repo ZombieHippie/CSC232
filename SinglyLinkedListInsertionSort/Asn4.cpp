@@ -140,7 +140,7 @@ void LinkedList<T>::sort() {
 		// Use to keep track of end of sorted list
 		Node<T> *lastSortedNode = NULL;
 
-		// Initiallize lastUnsortedNode with first node
+		// Initiallize lastSortedNode with first node
 		if (eachUnsortedIt.hasNext())
 			lastSortedNode = eachUnsortedIt.next();
 
@@ -152,7 +152,7 @@ void LinkedList<T>::sort() {
 			lastSortedNode->nextPtr = placingNode->nextPtr;
 
 			// "Detach" placingNode from other nodes
-			placingNode->nextPtr = NULL; // Unecessary
+			placingNode->nextPtr = NULL; // Unnecessary
 
 			Node<T> *currSortedNode = NULL; // Use to compare for sort
 			Node<T> *prevSortedNode = NULL; // Node before currSortedNode
